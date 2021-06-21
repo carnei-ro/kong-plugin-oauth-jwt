@@ -1,0 +1,39 @@
+---
+_format_version: "1.1"
+
+services:
+- name: httpbin
+  url: https://httpbin.org/anything
+
+routes:
+- hosts: []
+  methods: []
+  name: httpbin
+  paths:
+  - /
+  preserve_host: false
+  regex_priority: 1
+  service: httpbin
+  strip_path: false
+  plugins:
+    - name: oauth-jwt
+      enabled: true
+      config:
+        state_secret: mystatesecret
+        jwt_keys:
+          privkey1: |
+            -----BEGIN PUBLIC KEY-----
+            MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAO+G+jiCIvgyNETd/YAR3b40Ag+oWEQ2
+            QX1yau1ZbKRs2lUm7YqYxloV2uVLql/y/1MPnV+BtGviMKLNB6KHN0ECAwEAAQ==
+            -----END PUBLIC KEY-----
+        oauth_provider: custom
+        oauth_client_id: myclientid
+        oauth_callback_url: http://localhost:8000/auth/callback
+        oauth_provider_authorize_endpoint: https://my-gluu-server.com/oxauth/restv1/authorize
+
+
+# public_key: |
+#     -----BEGIN PUBLIC KEY-----
+#     MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAO+G+jiCIvgyNETd/YAR3b40Ag+oWEQ2
+#     QX1yau1ZbKRs2lUm7YqYxloV2uVLql/y/1MPnV+BtGviMKLNB6KHN0ECAwEAAQ==
+#     -----END PUBLIC KEY-----
