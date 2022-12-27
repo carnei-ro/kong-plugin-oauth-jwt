@@ -79,28 +79,28 @@ stop: ## Stop the containers.
 logs: kong-logs ## Show Kong container logs.
 .PHONY: kong-logs
 kong-logs: ## Same as logs.
-	@docker logs -f $$(docker ps -qf name=${DIR_NAME}_kong_1) 2>&1 || true
+	@docker logs -f $$(docker ps -qf name=${DIR_NAME}-kong-1) 2>&1 || true
 
 .PHONY: shell
 shell: kong-bash ## Docker exec into Kong container shell.
 .PHONY: kong-bash
 kong-bash: ## Same as shell.
-	@docker exec -it $$(docker ps -qf name=${DIR_NAME}_kong_1) bash || true
+	@docker exec -it $$(docker ps -qf name=${DIR_NAME}-kong-1) bash || true
 
 .PHONY: reload
 reload: kong-reload ## Perform Kong Reload into Kong container.
 .PHONY: kong-reload
 kong-reload: ## Same as reload.
-	@docker exec -it $$(docker ps -qf name=${DIR_NAME}_kong_1) bash -c "/usr/local/bin/kong reload"
+	@docker exec -it $$(docker ps -qf name=${DIR_NAME}-kong-1) bash -c "/usr/local/bin/kong reload"
 
 .PHONY: restart
 restart: ## Remove Kong container and recreate it.
-	@docker rm -vf $$(docker ps -qf name=${DIR_NAME}_kong_1)
+	@docker rm -vf $$(docker ps -qf name=${DIR_NAME}-kong-1)
 	@docker-compose -f ${DOCKER_COMPOSE_FILE} up -d
 
 .PHONY: truncate-logs
 truncate-logs: ## Needs sudo privileges: truncate Kong Container logs.
-	@sudo truncate -s 0 $$(docker inspect --format='{{.LogPath}}' ${DIR_NAME}_kong_1)
+	@sudo truncate -s 0 $$(docker inspect --format='{{.LogPath}}' ${DIR_NAME}-kong-1)
 
 .PHONY: reconfigure
 reconfigure: clean start kong-logs ## Shortcut to clean, start, logs.
@@ -123,7 +123,7 @@ req-aux: ## GET /aux endpoint.
 
 .PHONY: resty-script
 resty-script: ## Execute inside Kong Container the 'resty-script.lua' file.
-	@docker exec -it $$(docker ps -qf name=${DIR_NAME}_kong_1) /usr/local/openresty/bin/resty /plugin-development/resty-script.lua || true
+	@docker exec -it $$(docker ps -qf name=${DIR_NAME}-kong-1) /usr/local/openresty/bin/resty /plugin-development/resty-script.lua || true
 
 .PHONY: config
 config: ## Works only with Database: Create a 'httpbin' service and '/' route. Add the custom-plugin to the '/' route.

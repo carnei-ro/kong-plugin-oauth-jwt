@@ -46,7 +46,7 @@ function _M.execute(conf)
   if (not authz) or err then
     kong.response.exit(403, err)
   end
-  
+
   for _,cth in ipairs(conf.claims_to_headers) do
     local value = (type(claims[cth['claim']]) == "table") and cjson.encode(claims[cth['claim']]) or claims[cth['claim']]
     if (value == '{}') then value = nil end

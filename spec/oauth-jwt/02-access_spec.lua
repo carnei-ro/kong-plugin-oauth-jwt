@@ -1,6 +1,7 @@
 local helpers = require "spec.helpers"
 local table_concat = table.concat
 local encode_args  = ngx.encode_args
+local ipairs = ipairs
 
 local PLUGIN_NAME = "oauth-jwt"
 
@@ -37,7 +38,7 @@ local valid_jwt = "eyJraWQiOiJwcml2a2V5MSIsImFsZyI6IlJTMjU2IiwidHlwIjoiSldUIn0.e
 --   ["exp"] = 9924371585
 -- }
 
-for _, strategy in helpers.each_strategy() do
+for _, strategy in ipairs({'postgres', 'off'}) do
   describe(PLUGIN_NAME .. ": (access) [#" .. strategy .. "]", function()
     local client
 
@@ -348,7 +349,7 @@ for _, strategy in helpers.each_strategy() do
         })
         assert.response(r).has.status(401)
         local body = assert.response(r).has.jsonbody()
-        assert.equal(body['err'], "Could not load public key: key2")
+        assert.equal(body['err'], "Could not load public key")
       end)
 
       it("token in header authorization is invalid signature", function()
@@ -472,7 +473,7 @@ for _, strategy in helpers.each_strategy() do
         })
         --print(require('pl.pretty').write(r))
         local body = assert.response(r).has.jsonbody()
-        assert.response(r).has.status(404)       
+        assert.response(r).has.status(404)
         assert.equal(body['headers']['x-token-sub'], "leandro@google.com")
       end)
 

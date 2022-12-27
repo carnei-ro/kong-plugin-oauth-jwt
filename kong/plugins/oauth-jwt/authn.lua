@@ -7,6 +7,15 @@ local tostring     = tostring
 
 local kong = kong
 
+local ngx = ngx
+
+local RETRIVE_TOKEN_ERRORS = {
+  ["Bad token"] = true,
+  ["Could not load public key"] = true,
+  ["Invalid signature"] = true,
+  ["Token Expired"] = true,
+}
+
 local _M = {}
 
 local function has_value(tab, val)
@@ -20,16 +29,16 @@ end
 
 local function retrieve_jwt(conf, token)
   kong.log.debug(">>> Token was not in the cache")
-  
+
   local jwt, err = jwt_decoder:new(token)
   if err then
-    return nil, "Bad token; " .. tostring(err)
+    return nil, "Bad token"
   end
 
   local kid = jwt.header.kid or 'default'
   kong.log.debug("Using Key_ID: " .. kid)
   if not conf['jwt_keys'][kid] then
-    return nil, "Could not load public key: " .. kid
+    return nil, "Could not load public key"
   end
 
   if not jwt:verify_signature(conf['jwt_keys'][kid]) then
@@ -73,6 +82,11 @@ function _M:authenticate(conf, cache)
   local claims, err
   if conf.use_cache then
     claims, err = cache:get(signature, { ttl = conf.ttl }, retrieve_jwt, conf, token)
+    if (err) and (type(err) == "string") and (not RETRIVE_TOKEN_ERRORS[err]) then
+      kong.log.err(">>> MLCache ERROR: ", err)
+      -- if the error is comming from the "cache", tries to retreive the JWT from the request
+      claims, err = retrieve_jwt(conf, token)
+    end
   else
     claims, err = retrieve_jwt(conf, token)
   end
@@ -85,6 +99,12 @@ function _M:authenticate(conf, cache)
       return nil, "Invalid iss", nil
     end
   end
+
+  -- set the consumer for the request; 
+  --  this value will be used to export metrics by consumer (e.g. Prometheus with Kong >= 2.4.0)
+  ngx.ctx.authenticated_consumer = {
+    ["username"] = claims.sub
+  }
 
   return true, nil, claims
 end
